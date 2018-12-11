@@ -2,7 +2,7 @@
 
 import collections
 import os.path as osp
-from torchvision.transform import CenterCrop
+from torchvision.transforms import CenterCrop
 
 import numpy as np
 import PIL.Image
@@ -152,15 +152,16 @@ class SBDClassSeg(VOCClassSegBase):
         # load image
         img_file = data_file['img']
         img = PIL.Image.open(img_file)
-        img=centercrop(img)
+        img=self.centercrop(img)
         img = np.array(img, dtype=np.uint8)
         # load label
         lbl_file = data_file['lbl']
         mat = scipy.io.loadmat(lbl_file)
         lbl = mat['GTcls'][0]['Segmentation'][0].astype(np.int32)
-        print(lbl.shape)
-        print('voc')
-        exit()
+        lbl=PIL.Image.fromarray(lbl)
+        lbl=self.centercrop(lbl)
+        lbl=np.asarray(lbl)
+        lbl.setflags(write=1)
         lbl[lbl == 255] = -1
         if self._transform:
             return self.transform(img, lbl)

@@ -18,9 +18,6 @@ def train_epoch(model,optimizer,scheduler,criterion,train_loader,infos,args):
             inputs=inputs.cuda()
             labels=labels.cuda()
 
-        print(inputs.size())
-        print(labels.size())
-        exit()
         outputs=model(inputs)
         loss=criterion(outputs,labels)
         loss.backward()
