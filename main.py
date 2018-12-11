@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs 
 from datasets.voc import SBDClassSeg
 from train import train_epoch
+from val import val_epoch
 
 import numpy as np
 import time
@@ -17,7 +18,7 @@ import argparse
 
 def main():
     parser=argparse.ArgumentParser()
-    parser=add_argument('--id',type=str,default=None,
+    parser.add_argument('--id',type=str,default=None,
             help='An id to distinguish the saved model')
     parser.add_argument('--use_cuda',type=int,default=True)
     parser.add_argument('--start_from',type=str,default=None)
@@ -25,7 +26,7 @@ def main():
     parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
 
     parser.add_argument('--max_epochs',type=int,default=20)
-    parser.add_argument('--batch_size',type=int,default=1)
+    parser.add_argument('--batch_size',type=int,default=2)
     parser.add_argument('--n_class',type=int,default=20)
     parser.add_argument('--lr',type=float,default=1e-4)
     parser.add_argument('--momentum',type=float,default=0)
@@ -37,7 +38,7 @@ def main():
     parser.add_argument('--save_path',type=str,default='/mnt/disk1/lihao/person_lr/save/')
     parser.add_argument('--num_images_save',type=int,default=5,
             help='How much images you want to save')
-    parser.add_argument('--image_save_path',type=int,default='/mnt/disk1/lihao/person_lr/save/imgs/',
+    parser.add_argument('--image_save_path',type=str,default='/mnt/disk1/lihao/person_lr/save/imgs/',
             help='Where save the images')
 
     args=parser.parse_args()
@@ -46,26 +47,26 @@ def main():
     
     if args.data_type=='voc':
         train_loader=DataLoader(SBDClassSeg(args.data_root,
-            split='train',transform=True),batch_size=batch_size,
+            split='train',transform=True),batch_size=args.batch_size,
             shuffle=True,**kwargs)
         val_loader=DataLoader(SBDClassSeg(args.data_root,
-            split='val',transform=True),batch_size=batch_size,
+            split='val',transform=True),batch_size=args.batch_size,
             shuffle=False,**kwargs)
 
     
     vgg_model=VGGNet(requires_grad=True,remove_fc=True)
-    model=FCNs(pretrained_net=vgg_model,n_class=n_class)
+    model=FCNs(pretrained_net=vgg_model,n_class=args.n_class)
     if args.use_cuda:
         vgg_model=vgg_model.cuda()
         model=model.cuda()
         model=nn.DataParallel(model)
     
     criterion=nn.BCEWithLogitsLoss()
-    optimizer=optim.RMSprop(model.parameters(),lr=lr,
-            momentum=momentum,weight_decay=w_decay)
-    if args.use_cuda:
-        optimizer=optimizer.cuda()
-    scheduler=lr_scheduler.StepLR(optimizer,step_size=update_lr_step,gamma=update_lr_rate)
+    optimizer=optim.RMSprop(model.parameters(),lr=args.lr,
+            momentum=args.momentum,weight_decay=args.w_decay)
+    # if args.use_cuda:
+    #     optimizer=optimizer.cuda()
+    scheduler=lr_scheduler.StepLR(optimizer,step_size=args.update_lr_step,gamma=args.update_lr_rate)
 
 
     infos={}
@@ -76,7 +77,7 @@ def main():
     infos['mean_Pixel']=[]
     infos['meanIU']=[]
 
-    if start_from is not None and os.path.isfile(os.path.join(args.start_from,'model_'+args.id+'.pkl')):
+    if args.start_from is not None and os.path.isfile(os.path.join(args.start_from,'model_'+args.id+'.pkl')):
         D=torch.load(os.path.join(args.start_from,'model_'+args.id+'.pkl'))
         infos=D['infos']
         model.load_state_dict(D['model_state_dict'])
@@ -86,7 +87,7 @@ def main():
 
     for epoch in range(infos['epoch'],args.max_epochs):
         #train epoch
-        train_epochs(model,optimizer,scheduler,criterion,train_loader,infos,args)
+        train_epoch(model,optimizer,scheduler,criterion,train_loader,infos,args)
         #val epoch
         val_epoch(model,criterion,val_loader,infos,args)
         #save infos and model_dict
