@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--use_cuda',type=int,default=True)
     parser.add_argument('--start_from',type=str,default=None)
     parser.add_argument('--data_type',type=str,default='voc')
-    parser.add_argument('--data_root',type=str,default=None)
+    parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
 
     parser.add_argument('--max_epochs',type=int,default=20)
     parser.add_argument('--batch_size',type=int,default=1)
@@ -34,10 +34,10 @@ def main():
     parser.add_argument('--update_lr_step',type=float,default=500)
     
     parser.add_argument('--checkpoint_every',type=int,default=100)
-    parser.add_argument('--save_path',type=str,default=None)
+    parser.add_argument('--save_path',type=str,default='/mnt/disk1/lihao/person_lr/save/')
     parser.add_argument('--num_images_save',type=int,default=5,
             help='How much images you want to save')
-    parser.add_argument('--image_save_path',type=int,default=None,
+    parser.add_argument('--image_save_path',type=int,default='/mnt/disk1/lihao/person_lr/save/imgs/',
             help='Where save the images')
 
     args=parser.parse_args()
