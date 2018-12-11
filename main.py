@@ -98,6 +98,8 @@ def main():
             'scheduler_state_dict':scheduler.state_dict()
             },os.path.join(args.save_path,'model_'+args.id+'.pkl'))
 
+if __name__=='__main__':
+    main()
         
         
 
