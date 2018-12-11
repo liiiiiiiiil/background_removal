@@ -8,7 +8,7 @@ from fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs
 from datasets.voc import SBDClassSeg
 from train import train_epoch
 from val import val_epoch
-from utils import cross_entropy2d
+from utils import Cross_Entropy2D
 
 import numpy as np
 import time
@@ -63,7 +63,7 @@ def main():
         model=nn.DataParallel(model)
     
     # criterion=nn.BCEWithLogitsLoss()
-    criterion=cross_entropy2d()
+    criterion=Cross_Entropy2D()
     optimizer=optim.RMSprop(model.parameters(),lr=args.lr,
             momentum=args.momentum,weight_decay=args.w_decay)
     # if args.use_cuda:
