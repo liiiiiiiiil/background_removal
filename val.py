@@ -1,30 +1,35 @@
 import torch 
+import numpy as np
 from utils import iou,pixel_acc,save2image
 
 def val_epoch(model,criterion,val_loader,infos,args):
     
     epoch=infos['epoch']
     losses=[]
+    total_ious=[]
+    pixel_accs=[]
     for i,batch in enumerate(val_loader):
+        if i==args.max_val_iterations:
+            break
         inputs=batch[0]
         labels=batch[1]
-        if arg.use_cuda:
+        if args.use_cuda:
             inputs=inputs.cuda()
             labels=labels.cuda()
         
         outputs=model(inputs)
         loss=criterion(outputs,labels)
-        losses.append(loss)
+        losses.append(loss.data)
         outputs=outputs.data.cpu().numpy()
         N,_,h,w= outputs.shape 
         pred=outputs.transpose(0,2,3,1).reshape(-1,args.n_class).argmax(axis=1).reshape(N,h,w)
         targets=labels.data.cpu().numpy().reshape(N,h,w)
 
-        for p,t in zip(pred,target):
-            total_ious.append(iou(p,t))
+        for p,t in zip(pred,targets):
+            total_ious.append(iou(p,t,args.n_class))
             pixel_accs.append(pixel_acc(p,t))
     
-    save2image(pred,args)  
+    save2image(inputs,pred,args)  
     val_loss=np.mean(losses)
     total_ious=np.array(total_ious).T
     ious=np.nanmean(total_ious,axis=1)

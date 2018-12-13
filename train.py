@@ -1,7 +1,8 @@
 import torch
+from utils import cross_entropy2d
 
 
-def train_epoch(model,optimizer,scheduler,criterion,train_loader,infos,args):
+def train_epoch(model,optimizer,criterion,train_loader,infos,args):
     iteration=infos['iteration'] 
     epoch=infos['epoch']
     
@@ -9,7 +10,6 @@ def train_epoch(model,optimizer,scheduler,criterion,train_loader,infos,args):
     for i,batch in enumerate(train_loader):
         iteration+=1
 
-        scheduler.step()
         optimizer.zero_grad()
 
         inputs=batch[0]
@@ -23,7 +23,7 @@ def train_epoch(model,optimizer,scheduler,criterion,train_loader,infos,args):
         loss.backward()
         optimizer.step()
         
-        if iteration%args.checkpoint_every==0 and checkpoint_every>0:
+        if iteration%args.checkpoint_every==0 and args.checkpoint_every>0:
             print('Epoch:{},iteration:{},train_loss:{}'.format(epoch,iteration,loss))
             infos['train_loss'].append(loss)
 

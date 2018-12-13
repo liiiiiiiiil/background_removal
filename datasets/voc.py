@@ -10,6 +10,7 @@ import scipy.io
 import torch
 from torch.utils import data
 
+CROP_SIZE=128
 
 class VOCClassSegBase(data.Dataset):
 
@@ -132,7 +133,7 @@ class SBDClassSeg(VOCClassSegBase):
         self.root = root
         self.split = split
         self._transform = transform
-        self.centercrop=CenterCrop(256)
+        self.centercrop=CenterCrop(CROP_SIZE)
 
         dataset_dir = osp.join(self.root, 'VOC/benchmark_RELEASE/dataset')
         self.files = collections.defaultdict(list)

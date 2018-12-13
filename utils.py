@@ -12,7 +12,7 @@ class Cross_Entropy2D(nn.Module):
         self.weight=weight
         self.size_average=size_average
 
-    def forward(self,input,target):
+    def forward(self,input,target):#input:n,c,h,w target:n,h,w
         n, c, h, w = input.size()
         # log_p: (n, c, h, w)
         if LooseVersion(torch.__version__) < LooseVersion('0.3'):
@@ -28,8 +28,9 @@ class Cross_Entropy2D(nn.Module):
         # target: (n*h*w,)
         mask = target >= 0
         target = target[mask]
-        loss = F.nll_loss(log_p, target, weight=self.weight, reduction='sum')
+        loss = F.nll_loss(log_p, target,reduction='sum')
         if self.size_average:
+            mask=mask.float()
             loss /= mask.data.sum()
         return loss
         
@@ -59,20 +60,31 @@ def cross_entropy2d(input, target, weight=None, size_average=True):
 def save2image(image_array,args):
     #image_array: batch_size,h,w
 
+    # inputs=inputs.data.cpu().numpy().astype(np.uint8)
+    # inputs=inputs.transpose(0,2,3,1)
+    image_array=image_array.astype(np.uint8)
     N=image_array.shape[0]
+    # assert inputs.shape[0]==N,'Saving img,inputs.shape != outputs.shape'
     N_=args.num_images_save
     if N<N_:
         image_array=image_array
+        # inputs=inputs
     else:
         image_array=image_array[0:N_]
+        # inputs=inputs[0:N_]
     
     num=image_array.shape[0]  
-    for i in range(num):
-        img=Image.fromarray(image_array[i])
-        image_name=str(i)+'.png'
-        img.save(os.path.join(args.image_save_path,image_name))
 
-def iou(pred, target):
+    #Here,saving the input img and output img
+    for i in range(num):
+        img_o=Image.fromarray(image_array[i])
+        # img_i=Image.fromarray(inputs[i])
+        img_name_o=str(i)+'.png'
+        # img_name_i=str(i)+'.jpg'
+        img_o.save(os.path.join(args.image_save_path,img_name_o))
+        # img_i.save(os.path.join(args.image_save_path,img_name_i))
+
+def iou(pred, target,n_class):
     ious = []
     for cls in range(n_class):
         pred_inds = pred == cls
