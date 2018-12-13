@@ -4,11 +4,11 @@ import torch.nn as nn
 import torch.optim as optim 
 from torch.optim import lr_scheduler 
 from torch.utils.data import DataLoader 
-from fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs 
-from datasets.voc import SBDClassSeg
+from models.fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs 
+from dataloader.voc import SBDClassSeg
 from train import train_epoch
 from val import val_epoch
-from utils import Cross_Entropy2D
+from misc.utils import Cross_Entropy2D
 
 import numpy as np
 import time

@@ -1,5 +1,5 @@
 import torch
-from utils import cross_entropy2d
+from misc.utils import cross_entropy2d
 
 
 def train_epoch(model,optimizer,criterion,train_loader,infos,args):

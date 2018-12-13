@@ -1,6 +1,6 @@
 import torch 
 import numpy as np
-from utils import iou,pixel_acc,save2image
+from misc.utils import iou,pixel_acc,save2image
 
 def val_epoch(model,criterion,val_loader,infos,args):
     
