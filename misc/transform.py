@@ -19,7 +19,7 @@ class Trans(object):
         #lbl: PIL.Image, [h,w]
 
         #for img
-        img=resize(img)
+        img=self.resize(img)
         img=np.asarray(img)
         img=img[:,:,::-1]
         img=img.astype(np.float64)
@@ -28,7 +28,7 @@ class Trans(object):
         img=torch.from_numpy(img).float()
 
         #for label
-        lbl=resize(lbl)
+        lbl=self.resize(lbl)
         lbl=np.asarray(lbl).astype(np.int64)
         lbl.setflags(write=1)
         lbl[lbl>128]=255

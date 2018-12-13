@@ -14,7 +14,7 @@ class Person(data.Dataset):
     def __init__(self,root,split='train',transform=None):
         self.root = root
         self.split = split
-        self.transform = transform
+        self._transform = transform
 
         self.files=collections.defaultdict(list)
         for split in ['train','val']:
@@ -22,8 +22,10 @@ class Person(data.Dataset):
 
             for did in open(imgsets_file):
                 did=did.strip()
-                img_file=osp.join(root,'clean_images/images/%s.jpg'%did)
-                lbl_file=osp.join(root,'clean_images/profiles/%s.jpg'%did)
+                img_file=osp.join(root,'clean_images/images/%s'%did)
+                
+                lbl_did=did.split('.')[0]+'-profile.jpg'
+                lbl_file=osp.join(root,'clean_images/profiles/%s'%lbl_did)
                 self.files[split].append({
                     'img':img_file,
                     'lbl':lbl_file,
@@ -39,8 +41,8 @@ class Person(data.Dataset):
         #load lbl
         lbl_file=data_file['lbl']
         lbl=PIL.Image.open(lbl_file)
-        if transform!= None:
-            return self.transform(img,lbl)
+        if self._transform!= None:
+            return self._transform.transform(img,lbl)
         else:
             return img,lbl
 

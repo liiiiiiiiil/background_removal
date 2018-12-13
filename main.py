@@ -6,9 +6,11 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader 
 from models.fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs 
 from dataloader.voc import SBDClassSeg
+from dataloader.person import Person
 from train import train_epoch
 from val import val_epoch
 from misc.utils import Cross_Entropy2D
+from misc.transform import Trans
 
 import numpy as np
 import time
@@ -25,6 +27,7 @@ def main():
     parser.add_argument('--start_from',type=str,default=None)
     parser.add_argument('--data_type',type=str,default='voc')
     parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
+    # parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
 
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
@@ -57,7 +60,18 @@ def main():
         val_loader=DataLoader(SBDClassSeg(args.data_root,
             split='val',transform=True),batch_size=args.batch_size,
             shuffle=False,**kwargs)
-
+    elif args.data_type=='person':
+        mean_bgr=np.array([1,1,1])
+        transform=Trans(256,256,mean_bgr)
+        train_loader=DataLoader(Person(args.data_root,
+            split='train',transform=transform),batch_size=args.batch_size,
+            shuffle=True,**kwargs)
+    for batch in train_loader:
+        img=batch[0]
+        label=batch[1]
+        print(img.size())
+        print(label.size())
+    exit()
     
     vgg_model=VGGNet(requires_grad=True,remove_fc=True)
     model=FCNs(pretrained_net=vgg_model,n_class=args.n_class)
