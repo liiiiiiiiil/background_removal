@@ -39,8 +39,8 @@ def main():
     parser.add_argument('--lr',type=float,default=5e-4)
     parser.add_argument('--momentum',type=float,default=0)
     parser.add_argument('--w_decay',type=float,default=1e-5)
-    parser.add_argument('--update_lr_rate',type=float,default=0.5)
-    parser.add_argument('--update_lr_step',type=float,default=500)
+    parser.add_argument('--update_lr_rate',type=float,default=0.8)
+    parser.add_argument('--update_lr_step',type=float,default=5)
     
     parser.add_argument('--checkpoint_every',type=int,default=10)
     parser.add_argument('--save_path',type=str,default='/mnt/disk1/lihao/person_br/save/')
@@ -107,14 +107,14 @@ def main():
         scheduler.load_state_dict(D['scheduler_state_dict'])
 
     epoch=infos['epoch']
-    for epoch in range(epoch,args.max_epochs):
+    for i in range(epoch,args.max_epochs):
         #train epoch
         train_epoch(model,optimizer,criterion,train_loader,infos,args)
         #val epoch
         val_epoch(model,criterion,val_loader,infos,args)
         #save infos and model_dict
         scheduler.step()
-        infos['epoch']=epoch
+        infos['epoch']=i
         torch.save({
             'infos':infos,
             'model_state_dict':model.state_dict(),
