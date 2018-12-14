@@ -25,16 +25,16 @@ def main():
             help='An id to distinguish the saved model')
     parser.add_argument('--use_cuda',type=int,default=True)
     parser.add_argument('--start_from',type=str,default=None)
-    parser.add_argument('--data_type',type=str,default='voc')
-    parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
-    # parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
+    parser.add_argument('--data_type',type=str,default='person')
+    # parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
+    parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
 
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
     parser.add_argument('--max_epochs',type=int,default=20)
     parser.add_argument('--max_val_iterations',type=int,default=100,
             help='When you don\'t want to test the full val datasets,this help a lot')
-    parser.add_argument('--batch_size',type=int,default=4)
+    parser.add_argument('--batch_size',type=int,default=1)
     parser.add_argument('--n_class',type=int,default=21)
     parser.add_argument('--lr',type=float,default=5e-4)
     parser.add_argument('--momentum',type=float,default=0)
@@ -61,18 +61,11 @@ def main():
             split='val',transform=True),batch_size=args.batch_size,
             shuffle=False,**kwargs)
     elif args.data_type=='person':
-        mean_bgr=np.array([1,1,1])
+        mean_bgr=np.array([128.0523,134.4394,141.8439])
         transform=Trans(256,256,mean_bgr)
         train_loader=DataLoader(Person(args.data_root,
             split='train',transform=transform),batch_size=args.batch_size,
             shuffle=True,**kwargs)
-    for batch in train_loader:
-        img=batch[0]
-        label=batch[1]
-        print(img.size())
-        print(label.size())
-    exit()
-    
     vgg_model=VGGNet(requires_grad=True,remove_fc=True)
     model=FCNs(pretrained_net=vgg_model,n_class=args.n_class)
     if args.use_cuda:
