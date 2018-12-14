@@ -5,10 +5,13 @@ import torch.optim as optim
 from torch.optim import lr_scheduler 
 from torch.utils.data import DataLoader 
 from models.fcn import VGGNet,FCN32s,FCN16s,FCN8s,FCNs 
+
 from dataloader.voc import SBDClassSeg
 from dataloader.person import Person
+from dataloader.own_data import Own_data
+
 from train import train_epoch
-from val import val_epoch
+from val import val_epoch,eval_own_images
 from misc.utils import Cross_Entropy2D
 from misc.transform import Trans
 
@@ -21,13 +24,15 @@ import argparse
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--id',type=str,default=None,
+    parser.add_argument('--id',type=str,default='F',
             help='An id to distinguish the saved model')
-    parser.add_argument('--use_cuda',type=int,default=True)
+    parser.add_argument('--use_cuda',type=int,default=False)
     parser.add_argument('--start_from',type=str,default=None)
-    parser.add_argument('--data_type',type=str,default='person')
+    # parser.add_argument('--data_type',type=str,default='person')
+    parser.add_argument('--data_type',type=str,default='own_images')
     # parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
-    parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
+    # parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
+    parser.add_argument('--data_root',type=str,default='/Users/eincs/aiLab/person_br/datasets/icome_test_images')
 
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
@@ -69,7 +74,15 @@ def main():
         val_loader=DataLoader(Person(args.data_root,
             split='val',transform=transform),batch_size=args.batch_size,
             shuffle=True,**kwargs)
-    
+    elif args.data_type=='own_images':
+        mean_bgr=np.array([100,100,100])
+        transform=Trans(256,256,mean_bgr)
+        data_loader=DataLoader(Own_data(args.data_root,
+            transform=transform),batch_size=args.batch_size,
+            shuffle=False,**kwargs)
+    else:
+        raise RuntimeError('No this dataset')
+   
     vgg_model=VGGNet(requires_grad=True,remove_fc=True)
     model=FCNs(pretrained_net=vgg_model,n_class=args.n_class)
     if args.use_cuda:
@@ -107,6 +120,10 @@ def main():
         scheduler.load_state_dict(D['scheduler_state_dict'])
 
     epoch=infos['epoch']
+    if args.data_type=='own_data':
+        eval_own_images(model,data_loader,args)
+        return 
+        
     for i in range(epoch,args.max_epochs):
         #train epoch
         train_epoch(model,optimizer,criterion,train_loader,infos,args)
@@ -114,13 +131,13 @@ def main():
         val_epoch(model,criterion,val_loader,infos,args)
         #save infos and model_dict
         scheduler.step()
-        infos['epoch']=i
         torch.save({
             'infos':infos,
             'model_state_dict':model.state_dict(),
             'optimizer_state_dict':optimizer.state_dict(),
             'scheduler_state_dict':scheduler.state_dict()
             },os.path.join(args.save_path,'model_'+args.id+'.pkl'))
+        infos['epoch']+=1
 
 if __name__=='__main__':
     main()

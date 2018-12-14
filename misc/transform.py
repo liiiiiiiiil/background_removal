@@ -13,7 +13,7 @@ class Trans(object):
         self.New_W=New_W
         self.mean_bgr=mean_bgr 
 
-    def transform(self,img,lbl):
+    def transform(self,img,lbl=None):
 
         #img: PIL.Image, [h,w,c]
         #lbl: PIL.Image, [h,w]
@@ -26,6 +26,8 @@ class Trans(object):
         img-=self.mean_bgr
         img=img.transpose(2,0,1)
         img=torch.from_numpy(img).float()
+        if lbl==None:
+            return img
 
         #for label
         lbl=self.resize(lbl)

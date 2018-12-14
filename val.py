@@ -31,7 +31,6 @@ def val_epoch(model,criterion,val_loader,infos,args):
             total_ious.append(iou(p,t,args.n_class))
             pixel_accs.append(pixel_acc(p,t))
 
-    save2image(pred,args)  
     val_loss=np.mean(losses)
     total_ious=np.array(total_ious).T
     ious=np.nanmean(total_ious,axis=1)
@@ -45,6 +44,28 @@ def val_epoch(model,criterion,val_loader,infos,args):
     infos['mean_Pixel'].append((epoch,pixel_accs))
     infos['meanIU'].append((epoch,ious))
     model.train()
+
+def eval_own_images(model,data_loader,args):
+
+    model.eval()
+    save_path=args.image_save_path
+    for batch in data_loader:
+        img_names=batch[0]
+        imgs=batch[1]
+        if args.use_cuda:
+            imgs=imgs.cuda()
+
+        with torch.no_grad():
+            outputs=model(imgs)
+        
+        outputs=outputs.data.cpu().numpy()
+        save2image(outputs,img_names,save_path)
+
+    print('All {} images are save in:{}'.format(len(data_loader,args.image_save_path)))
+
+        
+
+    
 
 
     
