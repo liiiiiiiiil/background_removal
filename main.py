@@ -32,10 +32,10 @@ def main():
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
     parser.add_argument('--max_epochs',type=int,default=20)
-    parser.add_argument('--max_val_iterations',type=int,default=100,
+    parser.add_argument('--max_val_iterations',type=int,default=500,
             help='When you don\'t want to test the full val datasets,this help a lot')
-    parser.add_argument('--batch_size',type=int,default=1)
-    parser.add_argument('--n_class',type=int,default=21)
+    parser.add_argument('--batch_size',type=int,default=16)
+    parser.add_argument('--n_class',type=int,default=2)
     parser.add_argument('--lr',type=float,default=5e-4)
     parser.add_argument('--momentum',type=float,default=0)
     parser.add_argument('--w_decay',type=float,default=1e-5)
@@ -66,6 +66,10 @@ def main():
         train_loader=DataLoader(Person(args.data_root,
             split='train',transform=transform),batch_size=args.batch_size,
             shuffle=True,**kwargs)
+        val_loader=DataLoader(Person(args.data_root,
+            split='val',transform=transform),batch_size=args.batch_size,
+            shuffle=True,**kwargs)
+    
     vgg_model=VGGNet(requires_grad=True,remove_fc=True)
     model=FCNs(pretrained_net=vgg_model,n_class=args.n_class)
     if args.use_cuda:
@@ -105,7 +109,7 @@ def main():
     epoch=infos['epoch']
     for epoch in range(epoch,args.max_epochs):
         #train epoch
-        # train_epoch(model,optimizer,criterion,train_loader,infos,args)
+        train_epoch(model,optimizer,criterion,train_loader,infos,args)
         #val epoch
         val_epoch(model,criterion,val_loader,infos,args)
         #save infos and model_dict

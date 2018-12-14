@@ -31,8 +31,8 @@ class Trans(object):
         lbl=self.resize(lbl)
         lbl=np.asarray(lbl).astype(np.int64)
         lbl.setflags(write=1)
-        lbl[lbl>128]=255
         lbl[lbl<=128]=0
+        lbl[lbl>=128]=1
         lbl=torch.from_numpy(lbl).long()
 
         return img,lbl

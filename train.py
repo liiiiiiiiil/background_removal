@@ -24,30 +24,8 @@ def train_epoch(model,optimizer,criterion,train_loader,infos,args):
         optimizer.step()
         
         if iteration%args.checkpoint_every==0 and args.checkpoint_every>0:
-            print('Epoch:{},iteration:{},train_loss:{}'.format(epoch,iteration,loss))
-            infos['train_loss'].append(loss)
+            print('Epoch:{},iteration:{},train_loss:{}'.format(epoch,iteration,loss.item()))
+            infos['train_loss'].append(loss.item())
 
         infos['iteration']=iteration
         
-
-             
-            
-            
-            
-            
-            
-
-        
-        
-        
-        
-        
-
-        
-
-        
-        
-
-        
-        
-
