@@ -24,19 +24,19 @@ import argparse
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--id',type=str,default='F',
+    parser.add_argument('--id',type=str,default=None,
             help='An id to distinguish the saved model')
-    parser.add_argument('--use_cuda',type=int,default=False)
+    parser.add_argument('--use_cuda',type=int,default=True)
     parser.add_argument('--start_from',type=str,default=None)
     # parser.add_argument('--data_type',type=str,default='person')
     parser.add_argument('--data_type',type=str,default='own_images')
     # parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
     # parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
-    parser.add_argument('--data_root',type=str,default='/Users/eincs/aiLab/person_br/datasets/icome_test_images')
+    parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data/clean_images')
 
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
-    parser.add_argument('--max_epochs',type=int,default=20)
+    parser.add_argument('--max_epochs',type=int,default=30)
     parser.add_argument('--max_val_iterations',type=int,default=500,
             help='When you don\'t want to test the full val datasets,this help a lot')
     parser.add_argument('--batch_size',type=int,default=16)
@@ -48,10 +48,8 @@ def main():
     parser.add_argument('--update_lr_step',type=float,default=5)
     
     parser.add_argument('--checkpoint_every',type=int,default=10)
-    parser.add_argument('--save_path',type=str,default='/mnt/disk1/lihao/person_br/save/')
-    parser.add_argument('--num_images_save',type=int,default=5,
-            help='How much images you want to save')
-    parser.add_argument('--image_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/imgs/',
+    parser.add_argument('--checkpoint_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/')
+    parser.add_argument('--image_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/imgs2/',
             help='Where save the images')
 
     args=parser.parse_args()
@@ -75,7 +73,7 @@ def main():
             split='val',transform=transform),batch_size=args.batch_size,
             shuffle=True,**kwargs)
     elif args.data_type=='own_images':
-        mean_bgr=np.array([100,100,100])
+        mean_bgr=np.array([128.0523,134.4394,141.8439])
         transform=Trans(256,256,mean_bgr)
         data_loader=DataLoader(Own_data(args.data_root,
             transform=transform),batch_size=args.batch_size,
@@ -115,15 +113,14 @@ def main():
     if args.start_from is not None and os.path.isfile(os.path.join(args.start_from,'model_'+args.id+'.pkl')):
         D=torch.load(os.path.join(args.start_from,'model_'+args.id+'.pkl'))
         infos=D['infos']
-        model.load_state_dict(D['model_state_dict'])
         optimizer.load_state_dict(D['optimizer_state_dict'])
         scheduler.load_state_dict(D['scheduler_state_dict'])
+        model.load_state_dict(D['model_state_dict'])
 
     epoch=infos['epoch']
-    if args.data_type=='own_data':
+    if args.data_type=='own_images':
         eval_own_images(model,data_loader,args)
         return 
-        
     for i in range(epoch,args.max_epochs):
         #train epoch
         train_epoch(model,optimizer,criterion,train_loader,infos,args)
@@ -136,7 +133,7 @@ def main():
             'model_state_dict':model.state_dict(),
             'optimizer_state_dict':optimizer.state_dict(),
             'scheduler_state_dict':scheduler.state_dict()
-            },os.path.join(args.save_path,'model_'+args.id+'.pkl'))
+            },os.path.join(args.checkpoint_save_path,'model_'+args.id+'.pkl'))
         infos['epoch']+=1
 
 if __name__=='__main__':

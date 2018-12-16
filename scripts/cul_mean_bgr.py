@@ -3,8 +3,8 @@ import PIL.Image as Image
 import numpy as np
 from torchvision.transforms import Resize
 
-root_dir='./'
-img_names=os.listdir(os.path.join(root_dir,'images/'))
+image_dir='./images'
+img_names=os.listdir(os.path.join(root_dir))
 count=len(img_names)
 New_H,New_W=256,256
 rs=Resize([New_H,New_W])

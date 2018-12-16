@@ -61,10 +61,16 @@ def save2image(image_array,img_names,save_path):
     #image_array: batch_size,h,w
 
     image_array=image_array.astype(np.uint8)
+    image_array[image_array==1]=255
     num=image_array.shape[0]  
     #Here,saving the input img and output img
     for i in range(num):
-        img_o=Image.fromarray(image_array[i])
+        img_o=image_array[i]
+        img_o=np.argmax(img_o,axis=0)
+        #To grey img
+        img_o[img_o==1]=255
+        img_o=img_o.astype(np.uint8)
+        img_o=Image.fromarray(img_o)
         img_name_o=img_names[i]
         img_o.save(os.path.join(save_path,img_name_o))
 
