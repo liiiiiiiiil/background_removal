@@ -6,6 +6,14 @@ import PIL.Image as Image
 import torch.nn.functional as F
 from distutils.version import LooseVersion
 
+
+
+def cul_acc(pixel_acc,ious):
+    mean_ious=np.nanmean(ious)
+    # acc=0.5*pixel_acc+0.5*mean_ious
+    acc=mean_ious
+    return acc
+
 class Cross_Entropy2D(nn.Module):
     def __init__(self,weight=None,size_average=True):
         super().__init__()

@@ -61,7 +61,7 @@ def eval_own_images(model,data_loader,args):
         outputs=outputs.data.cpu().numpy()
         save2image(outputs,img_names,save_path)
 
-    print('All {} images are save in:{}'.format(len(data_loader,args.image_save_path)))
+    print('All {} images are save in:{}'.format(len(data_loader),args.image_save_path))
 
         
 

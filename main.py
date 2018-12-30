@@ -12,7 +12,7 @@ from dataloader.own_data import Own_data
 
 from train import train_epoch
 from val import val_epoch,eval_own_images
-from misc.utils import Cross_Entropy2D
+from misc.utils import Cross_Entropy2D,cul_acc
 from misc.transform import Trans
 
 import numpy as np
@@ -32,12 +32,11 @@ def main():
     parser.add_argument('--data_type',type=str,default='own_images')
     # parser.add_argument('--data_root',type=str,default='/mnt/disk1/han/dataset/')
     # parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data')
-    parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/icome_task2_data/clean_images')
-
+    parser.add_argument('--data_root',type=str,default='/mnt/disk1/lihao/person_br/datasets/own_images/')
     parser.add_argument('--optimizer',type=str,default='rmsprop',
             help='Choose a optimizer')
-    parser.add_argument('--max_epochs',type=int,default=30)
-    parser.add_argument('--max_val_iterations',type=int,default=500,
+    parser.add_argument('--max_epochs',type=int,default=40)
+    parser.add_argument('--max_val_iterations',type=int,default=100,
             help='When you don\'t want to test the full val datasets,this help a lot')
     parser.add_argument('--batch_size',type=int,default=16)
     parser.add_argument('--n_class',type=int,default=2)
@@ -49,7 +48,7 @@ def main():
     
     parser.add_argument('--checkpoint_every',type=int,default=10)
     parser.add_argument('--checkpoint_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/')
-    parser.add_argument('--image_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/imgs2/',
+    parser.add_argument('--image_save_path',type=str,default='/mnt/disk1/lihao/person_br/save/imgs4/',
             help='Where save the images')
 
     args=parser.parse_args()
@@ -65,7 +64,7 @@ def main():
             shuffle=False,**kwargs)
     elif args.data_type=='person':
         mean_bgr=np.array([128.0523,134.4394,141.8439])
-        transform=Trans(256,256,mean_bgr)
+        transform=Trans(512,384,mean_bgr)
         train_loader=DataLoader(Person(args.data_root,
             split='train',transform=transform),batch_size=args.batch_size,
             shuffle=True,**kwargs)
@@ -74,7 +73,7 @@ def main():
             shuffle=True,**kwargs)
     elif args.data_type=='own_images':
         mean_bgr=np.array([128.0523,134.4394,141.8439])
-        transform=Trans(256,256,mean_bgr)
+        transform=Trans(512,384,mean_bgr)
         data_loader=DataLoader(Own_data(args.data_root,
             transform=transform),batch_size=args.batch_size,
             shuffle=False,**kwargs)
@@ -110,29 +109,43 @@ def main():
     infos['mean_Pixel']=[]
     infos['meanIU']=[]
 
-    if args.start_from is not None and os.path.isfile(os.path.join(args.start_from,'model_'+args.id+'.pkl')):
-        D=torch.load(os.path.join(args.start_from,'model_'+args.id+'.pkl'))
-        infos=D['infos']
-        optimizer.load_state_dict(D['optimizer_state_dict'])
-        scheduler.load_state_dict(D['scheduler_state_dict'])
-        model.load_state_dict(D['model_state_dict'])
+    if args.start_from is not None and os.path.isfile(args.start_from):
+        D=torch.load(args.start_from)
+        if '_best_' in args.start_from:
+            infos=D['infos']
+            model.load_state_dict(D['model_state_dict'])
+        else:
+            infos=D['infos']
+            optimizer.load_state_dict(D['optimizer_state_dict'])
+            scheduler.load_state_dict(D['scheduler_state_dict'])
+            model.load_state_dict(D['model_state_dict'])
 
     epoch=infos['epoch']
     if args.data_type=='own_images':
         eval_own_images(model,data_loader,args)
         return 
+
+    best_acc=-1
     for i in range(epoch,args.max_epochs):
-        #train epoch
+        #Train epoch
         train_epoch(model,optimizer,criterion,train_loader,infos,args)
-        #val epoch
+        #Val epoch
         val_epoch(model,criterion,val_loader,infos,args)
-        #save infos and model_dict
+        #Save infos and model_dict
         scheduler.step()
+        
+        acc=cul_acc(infos['mean_Pixel'][-1][1],infos['meanIU'][-1][1])
+        if acc>best_acc:
+            torch.save({
+                'infos':infos,
+                'model_state_dict':model.state_dict(),
+                },os.path.join(args.checkpoint_save_path,'model_best_'+args.id+'.pkl'))
+            best_acc=acc
         torch.save({
             'infos':infos,
             'model_state_dict':model.state_dict(),
             'optimizer_state_dict':optimizer.state_dict(),
-            'scheduler_state_dict':scheduler.state_dict()
+            'scheduler_state_dict':scheduler.state_dict(),
             },os.path.join(args.checkpoint_save_path,'model_'+args.id+'.pkl'))
         infos['epoch']+=1
 
